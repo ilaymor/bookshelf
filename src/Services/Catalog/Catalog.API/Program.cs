@@ -1,14 +1,21 @@
+using Ilaymor.Bookshelf.Services.Catalog.API.Repos;
+using Ilaymor.Bookshelf.Services.Catalog.API.Settings;
+using MongoDB.Driver;
+
 var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+var configuration = builder.Configuration;
 
-// Add services to the container.
 
-builder.Services.AddControllers(options =>
+services.AddControllers(options =>
 {
     options.SuppressAsyncSuffixInActionNames = false;
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+var serviceSettings = configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
+var dbSettings = configuration.GetSection(nameof(DbSettings)).Get<DbSettings>();
+
+configureServices();
 
 var app = builder.Build();
 
@@ -26,3 +33,23 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+void configureServices()
+{
+    configureDb();
+    configureSwagger();
+    services.AddSingleton<ICatalogItemsRepo, CatalogItemsRepo>();
+}
+
+void configureDb()
+{
+    var mongoClient = new MongoClient(dbSettings.ConnectionString);
+    var mongoDatabase = mongoClient.GetDatabase(dbSettings.DatabaseName);
+    services.AddSingleton<IMongoDatabase>(mongoDatabase);
+}
+
+void configureSwagger()
+{
+    services.AddEndpointsApiExplorer();
+    services.AddSwaggerGen();
+}
