@@ -7,4 +7,11 @@ public class CatalogItem
     public string Title { get; set; }
 
     public string AuthorName { get; set; }
+
+    public CatalogItem(string title, string authorName)
+    {
+        Id = Guid.NewGuid();
+        Title = title;
+        AuthorName = authorName;
+    }
 }

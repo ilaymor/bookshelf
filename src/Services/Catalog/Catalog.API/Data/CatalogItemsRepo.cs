@@ -3,12 +3,12 @@ using MongoDB.Driver;
 
 namespace Ilaymor.Bookshelf.Services.Catalog.API.Data;
 
-public class CatalogRepo : ICatalogRepo
+public class CatalogItemsRepo : ICatalogItemsRepo
 {
     private readonly IMongoCollection<CatalogItem> _dbCollection;
     private readonly FilterDefinitionBuilder<CatalogItem> _filterBuilder = Builders<CatalogItem>.Filter;
 
-    public CatalogRepo()
+    public CatalogItemsRepo()
     {
         var mongoClient = new MongoClient("mongodb://localhost:27017");
         var database = mongoClient.GetDatabase("Catalog");

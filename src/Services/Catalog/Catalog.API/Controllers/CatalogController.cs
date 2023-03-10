@@ -1,4 +1,7 @@
+using Ilaymor.Bookshelf.Services.Catalog.API.Data;
 using Ilaymor.Bookshelf.Services.Catalog.API.Dto;
+using Ilaymor.Bookshelf.Services.Catalog.API.Model;
+using Ilaymor.Bookshelf.Services.Catalog.API.Profiles;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ilaymor.Bookshelf.Services.Catalog.API.Controllers;
@@ -7,48 +10,74 @@ namespace Ilaymor.Bookshelf.Services.Catalog.API.Controllers;
 [ApiController]
 public class CatalogController : ControllerBase
 {
-    private static readonly List<CatalogItemReadDto> _catalogItems = new()
+    private readonly ICatalogItemsRepo _repo;
+
+    public CatalogController(ICatalogItemsRepo repo)
     {
-        new CatalogItemReadDto(Guid.NewGuid(), "harry potter", "jk rowling"),
-        new CatalogItemReadDto(Guid.NewGuid(), "inifinite jest", "david foster wallace"),
-        new CatalogItemReadDto(Guid.NewGuid(), "clean code", "robert c martin"),
-    };
+        _repo = repo;
+    }
 
     // GET /[controller]
     [HttpGet]
-    public IEnumerable<CatalogItemReadDto> GetCatalogItems()
+    public async Task<ActionResult<IEnumerable<CatalogItemReadDto>>> GetCatalogItemsAsync()
     {
-        return _catalogItems;
+        var items = await _repo.GetCatalogItemsAsync();
+        var itemsReadDtos = items.Select(item => item.ToReadDto());
+        return Ok(itemsReadDtos);
     }
 
     // GET /[controller]/{id}
     [HttpGet("{id}")]
-    public CatalogItemReadDto GetCatalogItemById(Guid id)
+    public async Task<ActionResult<CatalogItemReadDto>> GetCatalogItemById(Guid id)
     {
-        var item = _catalogItems.Where(item => item.Id == id).SingleOrDefault();
-        return item;
+        var item = await _repo.GetCatalogItemByIdAsync(id);
+        if (item == null)
+        {
+            return NotFound();
+        }
+        var itemReadDto = item.ToReadDto();
+        return Ok(itemReadDto);
     }
 
     // POST /[controller]
     [HttpPost]
-    public ActionResult CreateCatalogItem(CatalogItemCreateDto createDto)
+    public async Task<ActionResult<CatalogItemReadDto>> CreateCatalogItem(CatalogItemCreateDto createDto)
     {
-        var item = new CatalogItemReadDto(Guid.NewGuid(), createDto.Title, createDto.AuthorName);
-        _catalogItems.Add(item);
+        var item = new CatalogItem(createDto.Title, createDto.AuthorName);
+        await _repo.CreateCatalogItemAsync(item);
         return CreatedAtAction(nameof(GetCatalogItemById), new { id = item.Id }, item);
     }
 
     // PUT /[controller]/{id}
-    [HttpPut("{id}")]
-    public IActionResult UpdateCatalogItem(CatalogItemUpdateDto updateDto)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateCatalogItemAsync(CatalogItemUpdateDto updateDto, Guid id)
     {
+        var existingItem = await _repo.GetCatalogItemByIdAsync(id);
+        if (existingItem == null)
+        {
+            return NotFound();
+        }
+
+        existingItem.Title = updateDto.Title;
+        existingItem.AuthorName = updateDto.AuthorName;
+        await _repo.UpdateCatalogItemAsync(existingItem);
+
         return NoContent();
+
     }
 
     // DELETE /[controller]/{id}
     [HttpDelete("{id}")]
-    public IActionResult DeleteCatalogItem()
+    public async Task<IActionResult> DeleteCatalogItem(Guid id)
     {
+        var item = await _repo.GetCatalogItemByIdAsync(id);
+        if (item == null)
+        {
+            return NotFound();
+        }
+
+        await _repo.DeleteCatalogItemAsync(item.Id);
+
         return NoContent();
     }
 }
