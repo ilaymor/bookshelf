@@ -10,3 +10,5 @@ public static class CatalogItemProfile
         return new CatalogItemReadDto(item.Id, item.Title, item.AuthorName);
     }
 }
+
+// TODO: refacotor to automapper

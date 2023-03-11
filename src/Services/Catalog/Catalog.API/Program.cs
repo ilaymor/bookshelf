@@ -21,7 +21,7 @@ services.AddControllers(options =>
 var mongoClient = new MongoClient(dbSettings.ConnectionString);
 var mongoDatabase = mongoClient.GetDatabase(dbSettings.DatabaseName);
 services.AddSingleton<IMongoDatabase>(mongoDatabase);
-services.AddSingleton<IRepository<CatalogItem>>(new MongoRepository<CatalogItem>(mongoDatabase, dbSettings.CollectionName));
+services.AddSingleton<ICatalogRepository>(new CatalogMongoRepository(mongoDatabase, dbSettings.CollectionName));
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 

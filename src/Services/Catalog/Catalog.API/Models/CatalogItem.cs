@@ -1,6 +1,6 @@
 namespace Ilaymor.Bookshelf.Services.Catalog.API.Models;
 
-public class CatalogItem : IItem
+public class CatalogItem
 {
     public Guid Id { get; set; }
 
