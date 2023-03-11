@@ -1,5 +1,5 @@
 using Ilaymor.Bookshelf.Services.Catalog.API.Dto;
-using Ilaymor.Bookshelf.Services.Catalog.API.Model;
+using Ilaymor.Bookshelf.Services.Catalog.API.Models;
 
 namespace Ilaymor.Bookshelf.Services.Catalog.API.Profiles;
 
