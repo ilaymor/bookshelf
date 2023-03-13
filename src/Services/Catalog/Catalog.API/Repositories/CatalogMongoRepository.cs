@@ -1,4 +1,5 @@
 using Ilaymor.Bookshelf.Services.Catalog.API.Models;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 namespace Ilaymor.Bookshelf.Services.Catalog.API.Repositories;
@@ -6,22 +7,22 @@ namespace Ilaymor.Bookshelf.Services.Catalog.API.Repositories;
 public class CatalogMongoRepository : ICatalogRepository
 {
     private readonly IMongoCollection<CatalogItem> _dbCollection;
-    private readonly FilterDefinitionBuilder<CatalogItem> _filterBuilder = Builders<CatalogItem>.Filter;
 
-    public CatalogMongoRepository(IMongoDatabase database, string collectionName)
+    public CatalogMongoRepository(IOptions<DbSettings> dbSettings)
     {
-        _dbCollection = database.GetCollection<CatalogItem>(collectionName);
+        var mongoClient = new MongoClient(dbSettings.Value.ConnectionString);
+        var mongoDatabase = mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
+        _dbCollection = mongoDatabase.GetCollection<CatalogItem>(dbSettings.Value.CollectionName);
     }
 
-    public async Task<IEnumerable<CatalogItem>> GetCatalogItemsAsync()
+    public async Task<IEnumerable<CatalogItem?>> GetCatalogItemsAsync()
     {
-        return await _dbCollection.Find(_filterBuilder.Empty).ToListAsync();
+        return await _dbCollection.Find(_ => true).ToListAsync();
     }
 
-    public async Task<CatalogItem> GetCatalogItemByIdAsync(Guid id)
+    public async Task<CatalogItem?> GetCatalogItemByIdAsync(Guid id)
     {
-        FilterDefinition<CatalogItem> filter = _filterBuilder.Eq(entity => entity.Id, id);
-        return await _dbCollection.Find(filter).FirstOrDefaultAsync();
+        return await _dbCollection.Find(item => item.Id == id).FirstOrDefaultAsync();
     }
 
     public async Task CreateCatalogItemAsync(CatalogItem catalogItem)
@@ -30,7 +31,6 @@ public class CatalogMongoRepository : ICatalogRepository
         {
             throw new ArgumentNullException(nameof(catalogItem));
         }
-        // Todo : add validation
         await _dbCollection.InsertOneAsync(catalogItem);
     }
 
@@ -42,13 +42,11 @@ public class CatalogMongoRepository : ICatalogRepository
         }
         // Todo : add validation
 
-        FilterDefinition<CatalogItem> filter = _filterBuilder.Eq(existingEntity => existingEntity.Id, catalogItem.Id);
-        await _dbCollection.ReplaceOneAsync(filter, catalogItem);
+        await _dbCollection.ReplaceOneAsync(item => item.Id == catalogItem.Id, catalogItem);
     }
 
     public async Task DeleteCatalogItemByIdAsync(Guid id)
     {
-        FilterDefinition<CatalogItem> filter = _filterBuilder.Eq(entity => entity.Id, id);
-        await _dbCollection.DeleteOneAsync(filter);
+        await _dbCollection.DeleteOneAsync(item => item.Id == id);
     }
 }

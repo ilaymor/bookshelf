@@ -5,9 +5,10 @@ namespace Ilaymor.Bookshelf.Services.Basket.API.Repositories;
 
 public interface IBasketRepository
 {
-    Task<CostumerBasket> GetBasketByIdAsync(Guid id);
-    Task CreateBasketAsync(BasketCreateDto createDto);
-    Task UpdateBasketAsync(BasketUpdateDto updateDto);
+    Task<CostumerBasket?> GetBasketByIdAsync(Guid id);
+    Task<CostumerBasket?> GetBasketByUserIdAsync(Guid userId);
+    Task CreateBasketAsync(CostumerBasket basket);
+    Task UpdateBasketAsync(CostumerBasket basket);
     Task DeleteBasketByIdAsync(Guid id);
 
 }

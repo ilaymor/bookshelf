@@ -1,0 +1,42 @@
+using Ilaymor.Bookshelf.Services.Basket.API.Models;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+
+namespace Ilaymor.Bookshelf.Services.Basket.API.Repositories;
+
+public class BasketMongoRepository : IBasketRepository
+{
+    private readonly IMongoCollection<CostumerBasket> _basketCollection;
+    public BasketMongoRepository(IOptions<DbSettings> dbSettings)
+    {
+        var mongoClient = new MongoClient(dbSettings.Value.ConnectionString);
+        var mongoDatabase = mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
+        _basketCollection = mongoDatabase.GetCollection<CostumerBasket>(dbSettings.Value.CollectionName);
+    }
+
+    public async Task<CostumerBasket?> GetBasketByIdAsync(Guid id)
+    {
+        return await _basketCollection.Find(basket => basket.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<CostumerBasket?> GetBasketByUserIdAsync(Guid userId)
+    {
+        return await _basketCollection.Find(basket => basket.UserId == userId).FirstOrDefaultAsync();
+    }
+
+    public async Task CreateBasketAsync(CostumerBasket basket)
+    {
+        await _basketCollection.InsertOneAsync(basket);
+    }
+
+    public async Task UpdateBasketAsync(CostumerBasket basket)
+    {
+        await _basketCollection.ReplaceOneAsync(existingBasket => existingBasket.Id == basket.Id, basket);
+    }
+
+    public async Task DeleteBasketByIdAsync(Guid id)
+    {
+        await _basketCollection.DeleteOneAsync(basket => basket.Id == id);
+    }
+
+}

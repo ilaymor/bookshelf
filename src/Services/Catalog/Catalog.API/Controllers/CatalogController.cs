@@ -19,7 +19,7 @@ public class CatalogController : ControllerBase
 
     // GET /[controller]
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CatalogItemReadDto>>> GetCatalogItemsAsync()
+    public async Task<ActionResult<IEnumerable<CatalogItemReadDto>>> GetCatalogItemsAsync(IEnumerable<Guid> ids = null!)
     {
         var items = await _repo.GetCatalogItemsAsync();
         var itemsReadDtos = items.Select(item => item.ToReadDto());
@@ -27,8 +27,8 @@ public class CatalogController : ControllerBase
     }
 
     // GET /[controller]/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<CatalogItemReadDto>> GetCatalogItemById(Guid id)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<CatalogItemReadDto>> GetCatalogItemByIdAsync(Guid id)
     {
         var item = await _repo.GetCatalogItemByIdAsync(id);
         if (item == null)
@@ -41,12 +41,12 @@ public class CatalogController : ControllerBase
 
     // POST /[controller]
     [HttpPost]
-    public async Task<ActionResult<CatalogItemReadDto>> CreateCatalogItem(CatalogItemCreateDto createDto)
+    public async Task<ActionResult<CatalogItemReadDto>> CreateCatalogItemAsync(CatalogItemCreateDto createDto)
     {
         var item = new CatalogItem(createDto.Title, createDto.AuthorName);
         var catalogItem = new CatalogItem(createDto.Title, createDto.AuthorName);
         await _repo.CreateCatalogItemAsync(catalogItem);
-        return CreatedAtAction(nameof(GetCatalogItemById), new { id = item.Id }, item);
+        return CreatedAtAction(nameof(GetCatalogItemByIdAsync), new { id = item.Id }, item);
     }
 
     [HttpPut]
@@ -66,8 +66,8 @@ public class CatalogController : ControllerBase
     }
 
     // DELETE /[controller]/{id}
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCatalogItem(Guid id)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteCatalogItemAsync(Guid id)
     {
         var item = await _repo.GetCatalogItemByIdAsync(id);
         if (item == null)
